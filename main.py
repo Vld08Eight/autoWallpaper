@@ -124,11 +124,40 @@ def connect_rigth(img1, img2):
     #im_2 = im_2.resize((400, 400))
 
     # ИЗМЕНИТЬ ЦВЕТ С 250 на средний
-    new_image = Image.new('RGB', ((im_2.size[0] + im_1.size[0]), max(im_1.size[1], im_2.size[1])), (250, 250, 250))
+    new_image = Image.new('RGB', ((im_2.size[0] + im_1.size[0]), min(im_1.size[1], im_2.size[1])), (250, 250, 250))
 
     # Paste the images onto the new image
     new_image.paste(im_1, (0, 0))
     new_image.paste(im_2, (im_1.size[0], 0))
+
+    # Save the merged image in the desired format
+    #new_image.save("some_image3.jpg", "JPEG")
+    return new_image
+
+def connect_up(img1, img2):
+    # Select the image files to be merged
+    img_file_1 = img1
+    img_file_2 = img2
+
+    # Open the image files
+    try:
+        im_1 = Image.open(img_file_1)
+    except:
+        im_1 = img1
+    try:
+        im_2 = Image.open(img_file_2)
+    except:
+        im_2 = img2
+    # Resize the images to the same size
+    #im_1 = im_1.resize((400, 400))
+    #im_2 = im_2.resize((400, 400))
+
+    # ИЗМЕНИТЬ ЦВЕТ С 250 на средний
+    new_image = Image.new('RGB', (min(im_1.size[0], im_2.size[0]), (im_2.size[1] + im_1.size[1])), (250, 250, 250))
+
+    # Paste the images onto the new image
+    new_image.paste(im_1, (0, 0))
+    new_image.paste(im_2, (0, im_1.size[1]))
 
     # Save the merged image in the desired format
     #new_image.save("some_image3.jpg", "JPEG")
@@ -142,17 +171,38 @@ def create_img_matrix(arr, x, y):
       img_matrix[i][j] = (arr[i*x+j], (img.size[0], img.size[1]))
   return img_matrix
 
+def get_size(img):
+    img_file_1 = img
+
+    # Open the image files
+    try:
+        im_1 = Image.open(img_file_1)
+    except:
+        im_1 = img
+
+    return im_1.size
+
 reload_files()#init files in folder
 arr = initialise(dir)# get arr of all imgs in dir
 x = 8
 y = 6
-img_Matrix = d = [ [ ("",[0,0]) for j in range( x ) ] for i in range( y ) ]
-outArr = get_compared_images_with(arr[4][0], arr, x*y)# get arr of names imgs with similar color
-print(outArr)
-nArr = get_arr_paths(outArr)# img paths
 
-img_matrix = create_img_matrix(get_arr_paths(get_compared_images_with(arr[4][0], arr, x*y)), x, y)
+img_matrix = create_img_matrix(get_arr_paths(get_compared_images_with(arr[15][0], arr, x*y)), x, y)
+img_arr_lines = []
+for i in range(0,y):
+    img_arr_lines.append(img_matrix[i][0][0])
+
+
 
 for i in range(y):
-  for j in range(x):
-    print(img_matrix[i][j])
+  for j in range(1,x):
+    if (get_size(img_arr_lines[i])[0] < 1920):
+        img_arr_lines[i] = connect_rigth(img_arr_lines[i], img_matrix[i][j][0])
+
+
+out_img = img_arr_lines[0]
+for i in range(1,y):
+    if (get_size(out_img)[1] < 1080):
+        out_img = connect_up(out_img, img_arr_lines[i])
+
+out_img.save("some_image.jpg", "JPEG")
