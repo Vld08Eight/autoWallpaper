@@ -8,8 +8,8 @@ from datetime import datetime
 import subprocess
 import random
 
-dir = "/run/media/Vld088/fun/desktop/Рисунки/сохран/"+"*.jpg"
-# print(files)
+dir = "/mnt/fun/desktop/Рисунки/сохран/"+"*.jpg"#you path
+
 
 def get_colors(file):
     image = cv2.imread(file)
@@ -56,12 +56,8 @@ def reload_files():
     for file in files:
         if (os.path.basename(file).split("_")[0][0] != "#"):
             perc = get_max_percent(get_colors(file))
-        #print(file)
-        #print(perc)
-        #print(rgb2hex(int(perc[0][0]),int(perc[0][1]),int(perc[0][2])))
             tohex = rgb2hex(int(perc[0][0]),int(perc[0][1]),int(perc[0][2]))
             os.rename(file, file.replace(os.path.basename(file), tohex+"_"+str(perc[1])+".jpg"))
-            #print(file.replace(os.path.basename(file), tohex+"_"+str(perc[1])+".jpg"))
 
 def initialise(dir):
     files = glob.glob(dir)
@@ -122,9 +118,6 @@ def connect_rigth(img1, img2):
         im_2 = Image.open(img_file_2)
     except:
         im_2 = img2
-    # Resize the images to the same size
-    #im_1 = im_1.resize((400, 400))
-    #im_2 = im_2.resize((400, 400))
 
     # ИЗМЕНИТЬ ЦВЕТ С 250 на средний
     new_image = Image.new('RGB', ((im_2.size[0] + im_1.size[0])+100, min(im_1.size[1], im_2.size[1])), (0, 0, 0))
@@ -133,8 +126,6 @@ def connect_rigth(img1, img2):
     new_image.paste(im_1, (0, 0))
     new_image.paste(im_2, (im_1.size[0]+100, 0))
 
-    # Save the merged image in the desired format
-    #new_image.save("some_image3.jpg", "JPEG")
     return new_image
 
 def connect_up(img1, img2):
@@ -151,19 +142,13 @@ def connect_up(img1, img2):
         im_2 = Image.open(img_file_2)
     except:
         im_2 = img2
-    # Resize the images to the same size
-    #im_1 = im_1.resize((400, 400))
-    #im_2 = im_2.resize((400, 400))
 
-    # ИЗМЕНИТЬ ЦВЕТ С 250 на средний
     new_image = Image.new('RGB', (min(im_1.size[0], im_2.size[0]), (im_2.size[1] + im_1.size[1])+100), (0, 0, 0))
 
-    # Paste the images onto the new image
+
     new_image.paste(im_1, (0, 0))
     new_image.paste(im_2, (0, im_1.size[1]+100))
 
-    # Save the merged image in the desired format
-    #new_image.save("some_image3.jpg", "JPEG")
     return new_image
 
 def create_img_matrix(arr, x, y):
@@ -176,8 +161,6 @@ def create_img_matrix(arr, x, y):
 
 def get_size(img):
     img_file_1 = img
-
-    # Open the image files
     try:
         im_1 = Image.open(img_file_1)
     except:
@@ -199,27 +182,31 @@ for i in range(0,y):
 
 for i in range(y):
   for j in range(1,x):
-    #if (get_size(img_arr_lines[i])[0] < 1920):
     img_arr_lines[i] = connect_rigth(img_arr_lines[i], img_matrix[i][j][0])
 
 
 out_img = img_arr_lines[0]
 for i in range(1,y):
-    #if (get_size(out_img)[1] < 1080):
     out_img = connect_up(out_img, img_arr_lines[i])
 
 
 
-i = 2
+try:
+    os.remove("si1.jpg")
+    img_file = "si2.jpg"
+except:
+    try:
+        os.remove("si2.jpg")
+    except:
+        pass
+    img_file = "si1.jpg"
 
-name = "si"+str(i)+".jpg"
-out_img.save("si"+str(i)+".jpg", "JPEG")
 
-#os.system("xwallpaper --center some_image.jpg")
-#os.system("feh")
-command1 = 'qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript \'var allDesktops = desktops();for (i=0;i<allDesktops.length;i++) {d = allDesktops[i];d.wallpaperPlugin = "org.kde.image";d.currentConfigGroup = Array("Wallpaper", "org.kde.image", "General");d.writeConfig("Image", "file:///mnt/Work/autoWallpaper/si1.jpg")}\''
-subprocess.run(command1, shell=True)
-os.system(command1)
-command2 = 'qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript \'var allDesktops = desktops();for (i=0;i<allDesktops.length;i++) {d = allDesktops[i];d.wallpaperPlugin = "org.kde.image";d.currentConfigGroup = Array("Wallpaper", "org.kde.image", "General");d.writeConfig("Image", "file:///mnt/Work/autoWallpaper/si2.jpg")}\''
-subprocess.run(command2, shell=True)
-os.system(command2)
+out_img.save(img_file, "JPEG")
+
+img_path = os.path.join("/mnt/Work/autoWallpaper", img_file)
+
+command = f'qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript \'var allDesktops = desktops();for (i=0;i<allDesktops.length;i++) {{d = allDesktops[i];d.wallpaperPlugin = "org.kde.image";d.currentConfigGroup = Array("Wallpaper", "org.kde.image", "General");d.writeConfig("Image", "file://{img_path}")}}\''
+
+subprocess.run(command, shell=True)
+os.system(command)
