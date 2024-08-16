@@ -8,7 +8,10 @@ from datetime import datetime
 import subprocess
 import random
 
-dir = "/mnt/fun/desktop/Рисунки/сохран/"+"*.jpg"#you path
+print("Enter path with photos(only jpg)")
+dir = input()+"*.jpg"
+if dir == "*.jpg":
+    dir = "/mnt/fun/desktop/Рисунки/сохран/"+"*.jpg"#you path
 
 
 def get_colors(file):
@@ -43,7 +46,6 @@ def get_max_percent(clusters):
     color[2] = int(color[2])
     return (tuple(color),maxP)
 
-
 def rgb2hex(r,g,b):
     return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
@@ -65,7 +67,6 @@ def initialise(dir):
     for file in files:
         arr.append((os.path.basename(file).split("_")[0], os.path.basename(file).split("_")[1]))
     return arr
-
 
 def compare_by_color(input_hex, arr) -> str:
     colors = arr
@@ -95,7 +96,6 @@ def get_compared_images_with(color, arr, count):
             outArr.append(comp)
         arr.pop(comp)
     return outArr
-
 
 def get_arr_paths(arr):
     files = glob.glob(dir)
@@ -170,8 +170,11 @@ def get_size(img):
 
 reload_files()#init files in folder
 arr = initialise(dir)# get arr of all imgs in dir
-x = 16
-y = 9
+x = int(input("width:"))
+y = int(input("height:"))
+if(x == 0 or y == 0):
+    x = 32
+    y = 18
 
 img_matrix = create_img_matrix(get_arr_paths(get_compared_images_with(arr[random.randint(0, 100)][0], arr, x*y)), x, y)
 img_arr_lines = []
