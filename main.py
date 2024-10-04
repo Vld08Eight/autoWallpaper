@@ -8,7 +8,7 @@ from datetime import datetime
 import subprocess
 import random
 
-print("Enter path with photos(only jpg)")
+print("Enter path in format /path/*.jpg ")
 dir = input()+"*.jpg"
 if dir == "*.jpg":
     dir = "/mnt/fun/desktop/Рисунки/сохран/"+"*.jpg"#you path
@@ -32,7 +32,7 @@ def get_colors(file):
     for (percent, color) in colors:
         out.append((color, "{:0.2f}%".format(percent * 100)))
     return out
-# Load image and convert to a list of pixels
+
 def get_max_percent(clusters):
     maxP=0
     for i in clusters:
@@ -56,10 +56,15 @@ def reload_files():
     files = glob.glob(dir)
     print(len(files))
     for file in files:
-        if (os.path.basename(file).split("_")[0][0] != "#"):
-            perc = get_max_percent(get_colors(file))
-            tohex = rgb2hex(int(perc[0][0]),int(perc[0][1]),int(perc[0][2]))
-            os.rename(file, file.replace(os.path.basename(file), tohex+"_"+str(perc[1])+".jpg"))
+        try:
+            if (os.path.basename(file).split("_")[0][0] != "#"):
+                perc = get_max_percent(get_colors(file))
+                tohex = rgb2hex(int(perc[0][0]),int(perc[0][1]),int(perc[0][2]))
+                os.rename(file, file.replace(os.path.basename(file), tohex+"_"+str(perc[1])+".jpg"))
+            else: 
+                None
+        except:
+            print("Error in file name!")
 
 def initialise(dir):
     files = glob.glob(dir)
@@ -168,48 +173,52 @@ def get_size(img):
 
     return im_1.size
 
-reload_files()#init files in folder
-arr = initialise(dir)# get arr of all imgs in dir
+def generateImg(dir, x, y):
+    reload_files()#init files in folder
+    arr = initialise(dir)# get arr of all imgs in dir
+    if(x == 0 or y == 0):
+        x = 32
+        y = 18
+
+    img_matrix = create_img_matrix(get_arr_paths(get_compared_images_with(arr[random.randint(0, 100)][0], arr, x*y)), x, y)
+    img_arr_lines = []
+    for i in range(0,y):
+        img_arr_lines.append(img_matrix[i][0][0])
+
+
+
+    for i in range(y):
+        for j in range(1,x):
+            img_arr_lines[i] = connect_rigth(img_arr_lines[i], img_matrix[i][j][0])
+
+
+    out_img = img_arr_lines[0]
+    for i in range(1,y):
+        out_img = connect_up(out_img, img_arr_lines[i])
+
+
+
+    try:
+        os.remove("si1.jpg")
+        img_file = "si2.jpg"
+    except:
+        try:
+            os.remove("si2.jpg")
+        except:
+            pass
+        img_file = "si1.jpg"
+
+
+    out_img.save(img_file, "JPEG")
+
+    img_path = os.path.join("/mnt/Work/autoWallpaper", img_file)
+
+    command = f'qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript \'var allDesktops = desktops();for (i=0;i<allDesktops.length;i++) {{d = allDesktops[i];d.wallpaperPlugin = "org.kde.image";d.currentConfigGroup = Array("Wallpaper", "org.kde.image", "General");d.writeConfig("Image", "file://{img_path}")}}\''
+
+    subprocess.run(command, shell=True)
+    os.system(command)
+
+
 x = int(input("width:"))
 y = int(input("height:"))
-if(x == 0 or y == 0):
-    x = 32
-    y = 18
-
-img_matrix = create_img_matrix(get_arr_paths(get_compared_images_with(arr[random.randint(0, 100)][0], arr, x*y)), x, y)
-img_arr_lines = []
-for i in range(0,y):
-    img_arr_lines.append(img_matrix[i][0][0])
-
-
-
-for i in range(y):
-  for j in range(1,x):
-    img_arr_lines[i] = connect_rigth(img_arr_lines[i], img_matrix[i][j][0])
-
-
-out_img = img_arr_lines[0]
-for i in range(1,y):
-    out_img = connect_up(out_img, img_arr_lines[i])
-
-
-
-try:
-    os.remove("si1.jpg")
-    img_file = "si2.jpg"
-except:
-    try:
-        os.remove("si2.jpg")
-    except:
-        pass
-    img_file = "si1.jpg"
-
-
-out_img.save(img_file, "JPEG")
-
-img_path = os.path.join("/mnt/Work/autoWallpaper", img_file)
-
-command = f'qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript \'var allDesktops = desktops();for (i=0;i<allDesktops.length;i++) {{d = allDesktops[i];d.wallpaperPlugin = "org.kde.image";d.currentConfigGroup = Array("Wallpaper", "org.kde.image", "General");d.writeConfig("Image", "file://{img_path}")}}\''
-
-subprocess.run(command, shell=True)
-os.system(command)
+generateImg(dir,x,y)
